@@ -39,6 +39,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/trash', [\App\Http\Controllers\ProjectController::class, 'trash'])->name('projects.trash');
     Route::get('/starred', [\App\Http\Controllers\ProjectController::class, 'starred'])->name('projects.starred');
     
+    // Project sharing routes
+    Route::post('projects/{id}/share', [\App\Http\Controllers\ProjectController::class, 'shareProject'])->name('projects.share');
+    Route::delete('projects/{id}/share/{userId}', [\App\Http\Controllers\ProjectController::class, 'removeShare'])->name('projects.share.remove');
+    Route::patch('projects/{id}/share/{userId}/permission', [\App\Http\Controllers\ProjectController::class, 'updateSharePermission'])->name('projects.share.permission');
+    
     // Bulk actions
     Route::post('/trash/restore-all', [\App\Http\Controllers\ProjectController::class, 'restoreAll'])->name('projects.restore-all');
     Route::delete('/trash/empty', [\App\Http\Controllers\ProjectController::class, 'emptyTrash'])->name('projects.empty-trash');

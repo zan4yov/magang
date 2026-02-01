@@ -287,7 +287,10 @@ class ProjectController extends Controller
         // Mark as viewed
         $project->markAsViewed();
 
-        return view('projects.show', compact('project'));
+        // Load shared users with pivot data
+        $sharedUsers = $project->sharedWith()->get();
+
+        return view('projects.show', compact('project', 'sharedUsers'));
     }
 
     /**
@@ -484,6 +487,115 @@ class ProjectController extends Controller
     }
 
     /**
+     * Share project with a user by email or username
+     */
+    public function shareProject(Request $request, string $id)
+    {
+        $project = Project::withTrashed()->findOrFail($id);
+        
+        // Only owner can share
+        if ($project->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Only the project owner can share this project.'], 403);
+        }
+
+        $request->validate([
+            'identifier' => 'required|string',
+            'can_edit' => 'boolean',
+        ]);
+
+        $identifier = trim($request->identifier);
+        $canEdit = $request->boolean('can_edit', false);
+
+        // Find user by email or username
+        $user = \App\Models\User::where('email', $identifier)
+            ->orWhere('name', $identifier)
+            ->first();
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found. Please check the email or username.'], 404);
+        }
+
+        // Can't share with yourself
+        if ($user->id === Auth::id()) {
+            return response()->json(['error' => 'You cannot share a project with yourself.'], 400);
+        }
+
+        // Check if already shared
+        if ($project->sharedWith()->where('users.id', $user->id)->exists()) {
+            return response()->json(['error' => 'This project is already shared with ' . $user->name . '.'], 400);
+        }
+
+        // Add share
+        $project->sharedWith()->attach($user->id, ['can_edit' => $canEdit]);
+
+        // Return updated shared users list
+        $sharedUsers = $project->sharedWith()->get()->map(function($u) {
+            return [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'can_edit' => $u->pivot->can_edit,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Project shared with ' . $user->name . ' successfully!',
+            'sharedUsers' => $sharedUsers,
+        ]);
+    }
+
+    /**
+     * Remove a user from project shares
+     */
+    public function removeShare(string $id, string $userId)
+    {
+        $project = Project::withTrashed()->findOrFail($id);
+        
+        // Only owner can remove shares
+        if ($project->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Only the project owner can manage sharing.'], 403);
+        }
+
+        $user = \App\Models\User::findOrFail($userId);
+        $project->sharedWith()->detach($userId);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Removed ' . $user->name . ' from shared users.',
+        ]);
+    }
+
+    /**
+     * Update share permission (toggle can_edit)
+     */
+    public function updateSharePermission(string $id, string $userId)
+    {
+        $project = Project::withTrashed()->findOrFail($id);
+        
+        // Only owner can update permissions
+        if ($project->user_id !== Auth::id()) {
+            return response()->json(['error' => 'Only the project owner can manage permissions.'], 403);
+        }
+
+        $share = $project->sharedWith()->where('users.id', $userId)->first();
+        
+        if (!$share) {
+            return response()->json(['error' => 'User is not a collaborator on this project.'], 404);
+        }
+
+        // Toggle permission
+        $newPermission = !$share->pivot->can_edit;
+        $project->sharedWith()->updateExistingPivot($userId, ['can_edit' => $newPermission]);
+
+        return response()->json([
+            'success' => true,
+            'can_edit' => $newPermission,
+            'message' => 'Permission updated to ' . ($newPermission ? 'Can Edit' : 'View Only'),
+        ]);
+    }
+
+    /**
      * Check if user can access this project
      */
     private function canAccess(Project $project): bool
@@ -498,4 +610,5 @@ class ProjectController extends Controller
         // Check if shared with user
         return $project->sharedWith()->where('users.id', $user->id)->exists();
     }
+
 }
