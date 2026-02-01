@@ -40,15 +40,38 @@ class DashboardController extends Controller
             return view('dashboard.super_admin', compact('user', 'stats'));
         }
 
-        // Route to role-specific dashboard view
-        switch ($user->role) {
-            case 'mining_tech':
-                // For now, mining tech users see the same as regular users
-                return redirect()->route('projects.index');
-            case 'user':
-            default:
-                // Redirect to projects index which handles all the project dashboard logic
-                return redirect()->route('projects.index');
+        // Mining Tech Team Dashboard
+        if ($user->isMiningTech()) {
+            // Get all projects in the system
+            $allProjects = \App\Models\Project::with('user')
+                ->where('is_draft', false)
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Get Mining Tech user's own projects
+            $myProjects = \App\Models\Project::where('user_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->get();
+            
+            // Statistics
+            $stats = [
+                'total_projects' => \App\Models\Project::where('is_draft', false)->count(),
+                'my_projects' => $myProjects->count(),
+                'recent_projects' => \App\Models\Project::where('is_draft', false)
+                    ->where('created_at', '>=', now()->subDays(7))
+                    ->count(),
+                'by_category' => [
+                    'mine_tech' => \App\Models\Project::where('is_draft', false)->where('category', 'mine_tech')->count(),
+                    'enviro' => \App\Models\Project::where('is_draft', false)->where('category', 'enviro')->count(),
+                    'startup' => \App\Models\Project::where('is_draft', false)->where('category', 'startup')->count(),
+                    'other' => \App\Models\Project::where('is_draft', false)->where('category', 'other')->count(),
+                ],
+            ];
+            
+            return view('dashboard.mining_tech', compact('user', 'allProjects', 'myProjects', 'stats'));
         }
+        
+        // Regular user dashboard
+        return redirect()->route('projects.index');
     }
 }

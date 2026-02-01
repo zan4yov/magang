@@ -14,6 +14,12 @@ class ProjectController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        
+        // Mining Tech users should use their own dashboard
+        if ($user->isMiningTech()) {
+            return redirect()->route('dashboard');
+        }
+        
         $tab = $request->get('tab', 'recent'); // recent, personal, shared
 
         $query = Project::query();
@@ -601,6 +607,11 @@ class ProjectController extends Controller
     private function canAccess(Project $project): bool
     {
         $user = Auth::user();
+        
+        // Mining Tech team can access all projects
+        if ($user->isMiningTech()) {
+            return true;
+        }
         
         // Owner can access
         if ($project->user_id === $user->id) {
