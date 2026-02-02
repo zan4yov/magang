@@ -26,6 +26,17 @@ class DashboardController extends Controller
                     'mining_tech' => \App\Models\User::where('role', 'mining_tech')->count(),
                     'super_admin' => \App\Models\User::where('role', 'super_admin')->count(),
                 ],
+                // Project statistics
+                'total_projects' => \App\Models\Project::withTrashed()->count(),
+                'completed_projects' => \App\Models\Project::where('is_draft', false)->count(),
+                'draft_projects' => \App\Models\Project::where('is_draft', true)->count(),
+                'recent_projects_count' => \App\Models\Project::where('created_at', '>=', now()->subDays(30))->count(),
+                'projects_by_category' => [
+                    'mine_tech' => \App\Models\Project::where('category', 'mine_tech')->count(),
+                    'enviro' => \App\Models\Project::where('category', 'enviro')->count(),
+                    'startup' => \App\Models\Project::where('category', 'startup')->count(),
+                    'other' => \App\Models\Project::where('category', 'other')->count(),
+                ],
             ];
 
             // Calculate growth percentage
@@ -36,6 +47,12 @@ class DashboardController extends Controller
 
             // Recent users activity (last 10)
             $stats['recent_users'] = \App\Models\User::orderBy('created_at', 'desc')->limit(10)->get();
+
+            // Recent projects (last 10) with creator info
+            $stats['recent_projects'] = \App\Models\Project::with('user')
+                ->orderBy('created_at', 'desc')
+                ->limit(10)
+                ->get();
 
             return view('dashboard.super_admin', compact('user', 'stats'));
         }

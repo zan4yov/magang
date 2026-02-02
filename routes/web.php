@@ -60,7 +60,12 @@ Route::middleware('auth')->group(function () {
 
 // Super Admin Routes
 Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')->group(function () {
+    // User management
     Route::resource('users', \App\Http\Controllers\Admin\UserManagementController::class)->except(['show']);
     Route::get('users/{id}/reset-password', [\App\Http\Controllers\Admin\UserManagementController::class, 'resetPassword'])->name('users.reset-password');
     Route::post('users/{id}/update-password', [\App\Http\Controllers\Admin\UserManagementController::class, 'updatePassword'])->name('users.update-password');
+    
+    // Project management
+    Route::get('projects', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'index'])->name('projects.index');
+    Route::get('projects/{id}', [\App\Http\Controllers\Admin\ProjectManagementController::class, 'show'])->name('projects.show');
 });

@@ -7,93 +7,157 @@
     <!-- Welcome Section -->
     <div class="dashboard-welcome">
         <h1 class="dashboard-title">Super Admin Dashboard</h1>
-        <p class="dashboard-subtitle">Full system control and user management</p>
+        <p class="dashboard-subtitle">System overview and management</p>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="quick-actions" style="margin-bottom: 2rem;">
-        <a href="{{ route('admin.users.index') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-            <svg style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-            </svg>
-            <span>Manage Users</span>
-        </a>
-        <a href="{{ route('admin.users.create') }}" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem; background: #ffffff; color: #7CB342; border: 2px solid #7CB342; padding: 0.75rem 1.25rem; border-radius: 12px; text-decoration: none; font-weight: 600; transition: all 0.3s;">
-            <svg style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
-            </svg>
-            <span>Create New User</span>
-        </a>
-    </div>
-
-    <!-- Statistics Cards -->
-    <div class="dashboard-stats">
-        <!-- Total Users -->
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-blue">
-                <svg fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
-                </svg>
-            </div>
-            <div class="stat-content">
-                <div class="stat-label">Total Users</div>
-                <div class="stat-value">{{ number_format($stats['total_users']) }}</div>
-                @if($stats['growth_percentage'] > 0)
-                    <div style="font-size: 0.875rem; color: #10b981; margin-top: 0.25rem;">
-                        +{{ $stats['growth_percentage'] }}% from last month
+    <!-- Combined Statistics Cards -->
+    <div style="background: #ffffff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 2rem; margin-bottom: 2rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0 0 1.5rem 0;">System Overview</h2>
+        
+        <div class="dashboard-stats">
+            <!-- Total Users -->
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-blue">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"></path>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value">{{ number_format($stats['total_users']) }}</div>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                        {{ $stats['users_by_role']['super_admin'] }} Admins | {{ $stats['users_by_role']['mining_tech'] }} Mining Tech | {{ $stats['users_by_role']['user'] }} Users
                     </div>
-                @endif
-            </div>
-        </div>
-
-        <!-- Active Users -->
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-green">
-                <svg fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
-                </svg>
-            </div>
-            <div class="stat-content">
-                <div class="stat-label">Active Users (24h)</div>
-                <div class="stat-value">{{ number_format($stats['active_users_24h']) }}</div>
-                <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
-                    Updated in last 24 hours
                 </div>
             </div>
-        </div>
 
-        <!-- Users by Role -->
-        <div class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                <svg fill="currentColor" viewBox="0 0 20 20">
-<path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
-                </svg>
-            </div>
-            <div class="stat-content">
-                <div class="stat-label">Super Admins</div>
-                <div class="stat-value">{{ number_format($stats['users_by_role']['super_admin']) }}</div>
-                <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
-                    {{ $stats['users_by_role']['mining_tech'] }} Mining Tech | {{ $stats['users_by_role']['user'] }} Users
+            <!-- Active Users -->
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-green">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Active Users</div>
+                    <div class="stat-value">{{ number_format($stats['active_users_24h']) }}</div>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                        Active in last 24 hours
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- New Users This Month -->
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-purple">
-                <svg fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M8 9a3 3 0 100-6 3 3 0 000 6zM8 11a6 6 0 016 6H2a6 6 0 016-6zM16 7a1 1 0 10-2 0v1h-1a1 1 0 100 2h1v1a1 1 0 102 0v-1h1a1 1 0 100-2h-1V7z"/>
-                </svg>
+            <!-- Total Projects -->
+            <div class="stat-card">
+                <div class="stat-icon" style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"></path>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Total Projects</div>
+                    <div class="stat-value">{{ number_format($stats['total_projects']) }}</div>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                        All projects in system
+                    </div>
+                </div>
             </div>
-            <div class="stat-content">
-                <div class="stat-label">New This Month</div>
-                <div class="stat-value">{{ number_format($stats['total_users_last_month']) }}</div>
-                <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
-                    Registered last 30 days
+
+            <!-- Active Projects (Completed) -->
+            <div class="stat-card">
+                <div class="stat-icon stat-icon-green">
+                    <svg fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-label">Active Projects</div>
+                    <div class="stat-value">{{ number_format($stats['completed_projects']) }}</div>
+                    <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
+                        {{ number_format($stats['draft_projects']) }} drafts in progress
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
+
+    <!-- Recent Projects Table -->
+    @if(count($stats['recent_projects']) > 0)
+    <div style="background: #ffffff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 2rem; margin-top: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0;">Recent Projects</h2>
+            <a href="{{ route('admin.projects.index') }}" style="color: #2196F3; text-decoration: none; font-weight: 500; font-size: 0.95rem;">View All →</a>
+        </div>
+
+        <div class="activity-table-container">
+            <table class="activity-table">
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Created By</th>
+                        <th>Category</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($stats['recent_projects'] as $project)
+                    <tr>
+                        <td>
+                            <div style="font-weight: 500; color: #1f2937;">{{ Str::limit($project->title, 50) }}</div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.875rem;">
+                                    {{ substr($project->user->name, 0, 1) }}
+                                </div>
+                                <span>{{ $project->user->name }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            @php
+                                $categoryColors = [
+                                    'mine_tech' => '#2196F3',
+                                    'enviro' => '#4CAF50',
+                                    'startup' => '#FF9800',
+                                    'other' => '#9E9E9E'
+                                ];
+                                $categoryLabels = [
+                                    'mine_tech' => 'Mine Tech',
+                                    'enviro' => 'Enviro',
+                                    'startup' => 'Startup',
+                                    'other' => 'Other'
+                                ];
+                            @endphp
+                            <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500; background: {{ $categoryColors[$project->category] }}20; color: {{ $categoryColors[$project->category] }};">
+                                {{ $categoryLabels[$project->category] }}
+                            </span>
+                        </td>
+                        <td>
+                            @if($project->is_draft)
+                                <span class="role-badge" style="background: #fff3e0; color: #f57c00;">Draft</span>
+                            @else
+                                <span class="role-badge role-mining-tech">Completed</span>
+                            @endif
+                        </td>
+                        <td>{{ $project->created_at->format('d M Y') }}</td>
+                        <td>
+                            <a href="{{ route('admin.projects.show', $project->id) }}" class="action-btn" style="background: #e3f2fd; color: #2196F3;" title="View Project">
+                                <svg fill="currentColor" viewBox="0 0 20 20" style="width: 16px; height: 16px;">
+                                    <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                    <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 
     <!-- Recent User Activity -->
     <div style="background: #ffffff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 2rem; margin-top: 2rem;">
