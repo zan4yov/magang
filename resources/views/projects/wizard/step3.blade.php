@@ -4,23 +4,7 @@
 
 @section('content')
 <div class="dashboard-container">
-    <!-- Progress Indicator -->
-    <div class="wizard-progress">
-        <div class="wizard-step completed">
-            <div class="wizard-step-number">✓</div>
-            <div class="wizard-step-label">Project Info</div>
-        </div>
-        <div class="wizard-step-line active"></div>
-        <div class="wizard-step completed">
-            <div class="wizard-step-number">✓</div>
-            <div class="wizard-step-label">Empathy Map</div>
-        </div>
-        <div class="wizard-step-line active"></div>
-        <div class="wizard-step active">
-            <div class="wizard-step-number">3</div>
-            <div class="wizard-step-label">Customer Profile</div>
-        </div>
-    </div>
+    
 
     <!-- Header -->
     <div style="margin: 2rem 0;">
@@ -28,14 +12,44 @@
         <p class="dashboard-subtitle">Value Proposition Canvas - Customer Segment</p>
     </div>
 
+    <!-- Warning for AI Failure -->
+    @if(session('warning') || session('ai_failed'))
+        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: start; gap: 1rem;">
+            <svg style="width: 24px; height: 24px; color: #ff9800; flex-shrink: 0; margin-top: 0.125rem;" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+            </svg>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: #f57c00; margin-bottom: 0.25rem;">AI Generation Issue</div>
+                <div style="color: #666; font-size: 0.95rem; line-height: 1.5;">
+                    {{ session('warning') ?? 'AI generation encountered an issue. You can manually add items using the "+ Add" buttons below, edit the empathy map, or try regenerating the profile.' }}
+                </div>
+            </div>
+        </div>
+    @endif
+
+    <!-- Success Message -->
+    @if(session('success'))
+        <div style="background: #d1fae5; border: 1px solid: #10b981; border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+            <svg style="width: 20px; height: 20px; color: #059669;" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span style="color: #065f46; font-weight: 500;">{{ session('success') }}</span>
+        </div>
+    @endif
+
     <div style="max-width: 1100px; margin: 0 auto;">
         <!-- Customer Profile Sections -->
         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
             <!-- Customer Jobs -->
             <div class="profile-section">
-                <div class="profile-section-header" style="background: #3b82f6;">
-                    <h3>⚙️ Customer Jobs</h3>
-                    <p>What customers are trying to accomplish</p>
+                <div class="profile-section-header" style="background: #3b82f6; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3> Customer Jobs</h3>
+                        <p>What customers are trying to accomplish</p>
+                    </div>
+                    <button onclick="addItem('customer_jobs')" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        + Add
+                    </button>
                 </div>
                 <div class="profile-items">
                     @forelse($customerProfile['customer_jobs'] ?? [] as $index => $job)
@@ -55,16 +69,21 @@
                             </div>
                         </div>
                     @empty
-                        <div class="profile-item-empty">No jobs identified</div>
+                        <div class="profile-item-empty">No jobs identified. Click "+ Add" to add manually.</div>
                     @endforelse
                 </div>
             </div>
 
             <!-- Customer Pains -->
             <div class="profile-section">
-                <div class="profile-section-header" style="background: #ef4444;">
-                    <h3>😰 Pains</h3>
-                    <p>Obstacles and frustrations</p>
+                <div class="profile-section-header" style="background: #ef4444; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3> Pains</h3>
+                        <p>Obstacles and frustrations</p>
+                    </div>
+                    <button onclick="addItem('customer_pains')" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        + Add
+                    </button>
                 </div>
                 <div class="profile-items">
                     @forelse($customerProfile['customer_pains'] ?? [] as $index => $pain)
@@ -84,16 +103,21 @@
                             </div>
                         </div>
                     @empty
-                        <div class="profile-item-empty">No pains identified</div>
+                        <div class="profile-item-empty">No pains identified. Click "+ Add" to add manually.</div>
                     @endforelse
                 </div>
             </div>
 
             <!-- Customer Gains -->
             <div class="profile-section">
-                <div class="profile-section-header" style="background: #10b981;">
-                    <h3>😊 Gains</h3>
-                    <p>Desired outcomes and benefits</p>
+                <div class="profile-section-header" style="background: #10b981; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3> Gains</h3>
+                        <p>Desired outcomes and benefits</p>
+                    </div>
+                    <button onclick="addItem('customer_gains')" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                        + Add
+                    </button>
                 </div>
                 <div class="profile-items">
                     @forelse($customerProfile['customer_gains'] ?? [] as $index => $gain)
@@ -113,7 +137,7 @@
                             </div>
                         </div>
                     @empty
-                        <div class="profile-item-empty">No gains identified</div>
+                        <div class="profile-item-empty">No gains identified. Click "+ Add" to add manually.</div>
                     @endforelse
                 </div>
             </div>
@@ -123,7 +147,7 @@
         <div style="background: #ffffff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
             <details>
                 <summary style="cursor: pointer; font-weight: 600; color: #1f2937; font-size: 1.0625rem;">
-                    🤖 View AI Reasoning
+                     View AI Reasoning
                 </summary>
                 <div style="margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 8px; color: #4b5563; line-height: 1.6;">
                     {{ $customerProfile['reasoning'] ?? 'No reasoning available' }}
@@ -284,6 +308,16 @@
 </style>
 
 <script>
+function addItem(type) {
+    const newValue = prompt('Enter new item:');
+    if (newValue && newValue.trim()) {
+        document.getElementById('editType').value = type;
+        document.getElementById('editIndex').value = -1; // -1 indicates new item
+        document.getElementById('editValue').value = newValue.trim();
+        document.getElementById('editForm').submit();
+    }
+}
+
 function editItem(type, index, currentValue) {
     const newValue = prompt('Edit item:', currentValue);
     if (newValue && newValue !== currentValue) {

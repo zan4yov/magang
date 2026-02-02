@@ -8,15 +8,22 @@ use Illuminate\Support\Facades\Log;
 
 class GeminiService
 {
+    protected string $provider;
     protected string $apiKey;
-    protected string $apiUrl;
     protected string $model;
+    protected int $maxRetries = 3;
 
     public function __construct()
     {
-        $this->apiKey = config('services.gemini.api_key');
-        $this->model = config('services.gemini.model', 'gemini-2.0-flash');
-        $this->apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent";
+        $this->provider = config('services.ai_provider', 'groq');
+        
+        if ($this->provider === 'groq') {
+            $this->apiKey = config('services.groq.api_key');
+            $this->model = config('services.groq.model', 'llama-3.3-70b-versatile');
+        } else {
+            $this->apiKey = config('services.gemini.api_key');
+            $this->model = config('services.gemini.model', 'gemini-2.0-flash');
+        }
     }
 
     /**
@@ -25,155 +32,196 @@ class GeminiService
     public function generateCustomerProfile(array $empathyData): array
     {
         $prompt = $this->buildPrompt($empathyData);
-
-        try {
-            $response = Http::timeout(30)
-                ->withHeaders([
-                    'Content-Type' => 'application/json',
-                ])
-                ->post($this->apiUrl . '?key=' . $this->apiKey, [
-                    'contents' => [
-                        [
-                            'parts' => [
-                                ['text' => $prompt]
-                            ]
-                        ]
-                    ],
-                    'generationConfig' => [
-                        'temperature' => 0.7,
-                        'topK' => 40,
-                        'topP' => 0.95,
-                        'maxOutputTokens' => 2048,
-                    ]
-                ]);
-
-            if (!$response->successful()) {
-                $errorBody = $response->json();
-                $statusCode = $response->status();
-                
-                // Handle specific error codes
-                if ($statusCode === 429) {
-                    $retryDelay = $errorBody['error']['details'][0]['metadata']['retryDelay'] ?? '30s';
-                    throw new Exception("API rate limit exceeded. Please wait {$retryDelay} and try again, or use a different API key.");
-                } elseif ($statusCode === 403 || $statusCode === 401) {
-                    throw new Exception('Invalid API key. Please check your GEMINI_API_KEY in .env file.');
-                } elseif ($statusCode === 404) {
-                    throw new Exception('Model not found. The API model may have been updated. Please contact support.');
-                } else {
-                    throw new Exception('Gemini API request failed: ' . ($errorBody['error']['message'] ?? $response->body()));
-                }
-            }
-
-            $result = $response->json();
-            
-            return $this->parseGeminiResponse($result);
-
-        } catch (Exception $e) {
-            Log::error('Gemini API Error: ' . $e->getMessage());
-            throw new Exception($e->getMessage());
+        
+        if ($this->provider === 'groq') {
+            return $this->callGroqApi($prompt);
         }
+        
+        return $this->callGeminiApi($prompt);
     }
 
     /**
-     * Build the prompt for Gemini AI
+     * Call Groq API
+     */
+    protected function callGroqApi(string $prompt): array
+    {
+        $lastException = null;
+        
+        for ($attempt = 1; $attempt <= $this->maxRetries; $attempt++) {
+            try {
+                $response = Http::timeout(60)
+                    ->withHeaders([
+                        'Authorization' => 'Bearer ' . $this->apiKey,
+                        'Content-Type' => 'application/json',
+                    ])
+                    ->post('https://api.groq.com/openai/v1/chat/completions', [
+                        'model' => $this->model,
+                        'messages' => [
+                            [
+                                'role' => 'user',
+                                'content' => $prompt
+                            ]
+                        ],
+                        'temperature' => 0.4,
+                        'max_tokens' => 3072,
+                    ]);
+
+                if ($response->successful()) {
+                    $result = $response->json();
+                    $text = $result['choices'][0]['message']['content'] ?? '';
+                    return $this->parseJsonResponse($text);
+                }
+                
+                $errorBody = $response->json();
+                $statusCode = $response->status();
+                $errorMessage = $errorBody['error']['message'] ?? 'Unknown error';
+                
+                Log::error("Groq API Error (Attempt {$attempt})", [
+                    'status' => $statusCode,
+                    'error' => $errorMessage,
+                ]);
+                
+                if ($statusCode === 429) {
+                    if ($attempt < $this->maxRetries) {
+                        sleep(pow(2, $attempt));
+                        continue;
+                    }
+                    throw new Exception('Rate limit exceeded. Please wait and try again.');
+                }
+                
+                throw new Exception($errorMessage);
+                
+            } catch (Exception $e) {
+                $lastException = $e;
+                if ($attempt >= $this->maxRetries) {
+                    throw $e;
+                }
+                sleep(pow(2, $attempt));
+            }
+        }
+        
+        throw $lastException ?? new Exception('AI generation failed.');
+    }
+
+    /**
+     * Call Gemini API (fallback)
+     */
+    protected function callGeminiApi(string $prompt): array
+    {
+        $apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/{$this->model}:generateContent";
+        
+        $response = Http::timeout(60)
+            ->withHeaders(['Content-Type' => 'application/json'])
+            ->post($apiUrl . '?key=' . $this->apiKey, [
+                'contents' => [['parts' => [['text' => $prompt]]]],
+                'generationConfig' => [
+                    'temperature' => 0.4,
+                    'maxOutputTokens' => 3072,
+                ]
+            ]);
+
+        if (!$response->successful()) {
+            $error = $response->json()['error']['message'] ?? 'API error';
+            throw new Exception($error);
+        }
+
+        $text = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '';
+        return $this->parseJsonResponse($text);
+    }
+
+    /**
+     * Parse JSON response from AI
+     */
+    protected function parseJsonResponse(string $text): array
+    {
+        // Remove markdown code blocks if present
+        $text = preg_replace('/```json\s*|\s*```/', '', $text);
+        $text = trim($text);
+        
+        $data = json_decode($text, true);
+        
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            Log::error('Invalid JSON from AI', ['response' => $text]);
+            throw new Exception('Invalid JSON response from AI.');
+        }
+        
+        if (!isset($data['vpc_points']) || !is_array($data['vpc_points'])) {
+            throw new Exception('Missing vpc_points in AI response.');
+        }
+        
+        // Categorize points
+        $customerJobs = [];
+        $customerPains = [];
+        $customerGains = [];
+        
+        foreach ($data['vpc_points'] as $point) {
+            if (!isset($point['type'], $point['description'])) continue;
+            
+            switch ($point['type']) {
+                case 'customer_job':
+                    $customerJobs[] = $point['description'];
+                    break;
+                case 'pain':
+                    $customerPains[] = $point['description'];
+                    break;
+                case 'gain':
+                    $customerGains[] = $point['description'];
+                    break;
+            }
+        }
+        
+        if (empty($customerJobs) && empty($customerPains) && empty($customerGains)) {
+            throw new Exception('No valid points found in AI response.');
+        }
+        
+        return [
+            'customer_jobs' => $customerJobs,
+            'customer_pains' => $customerPains,
+            'customer_gains' => $customerGains,
+            'vpc_points' => $data['vpc_points'],
+        ];
+    }
+
+    /**
+     * Build the prompt for AI
      */
     protected function buildPrompt(array $empathyData): string
     {
-        $says = implode("\n- ", $empathyData['says'] ?? []);
-        $thinks = implode("\n- ", $empathyData['thinks'] ?? []);
-        $does = implode("\n- ", $empathyData['does'] ?? []);
-        $feels = implode("\n- ", $empathyData['feels'] ?? []);
+        $says = implode("\n", $empathyData['says'] ?? []);
+        $thinks = implode("\n", $empathyData['thinks'] ?? []);
+        $does = implode("\n", $empathyData['does'] ?? []);
+        $feels = implode("\n", $empathyData['feels'] ?? []);
 
         return <<<PROMPT
-You are an expert business strategist specializing in Value Proposition Canvas (VPC) analysis. Your task is to analyze empathy map data and generate a comprehensive Customer Profile.
+ROLE
+You are an expert Business Analyst specializing in Value Proposition Design.
 
-# Empathy Map Input:
+TASK
+Analyze this Empathy Map data and create a Customer Profile.
 
-**Says** (what customers express verbally):
-- {$says}
+INPUT
+1. Says: "{$says}"
+2. Thinks: "{$thinks}" 
+3. Does: "{$does}" 
+4. Feels: "{$feels}"
 
-**Thinks** (internal thoughts and concerns):
-- {$thinks}
+INSTRUCTIONS
+Extract insights into three categories:
+1. Customer Jobs: What is the user trying to accomplish?
+2. Pains: What frustrates or blocks them?
+3. Gains: What outcomes do they want?
 
-**Does** (observable behaviors and actions):
-- {$does}
-
-**Feels** (emotions and feelings):
-- {$feels}
-
-# Your Task:
-
-Analyze the empathy map data and generate a Customer Profile with three components:
-
-1. **Customer Jobs**: What customers are trying to accomplish (functional, social, emotional jobs)
-2. **Pains**: Obstacles, frustrations, risks, and negative outcomes customers experience
-3. **Gains**: Desired outcomes, benefits, and measures of success customers seek
-
-# Important Guidelines:
-
-- Be specific and actionable
-- Focus on insights, not just rephrasing empathy data
-- Each category should have 3-7 distinct points
-- Use first-person perspective from customer's viewpoint
-- Prioritize the most impactful insights
-
-# Output Format:
-
-Return ONLY a valid JSON object in this exact structure (no markdown, no extra text):
-
+OUTPUT
+Return ONLY valid JSON (no markdown, no extra text):
 {
-  "customer_jobs": [
-    "Job description 1",
-    "Job description 2"
-  ],
-  "customer_pains": [
-    "Pain description 1",
-    "Pain description 2"
-  ],
-  "customer_gains": [
-    "Gain description 1",
-    "Gain description 2"
-  ],
-  "reasoning": "Brief explanation of your analysis approach and key insights (2-3 sentences)"
+  "vpc_points": [
+    { "type": "customer_job", "description": "Description in Indonesian" },
+    { "type": "pain", "description": "Description in Indonesian" },
+    { "type": "gain", "description": "Description in Indonesian" }
+  ]
 }
-PROMPT;
-    }
 
-    /**
-     * Parse Gemini API response and extract customer profile
-     */
-    protected function parseGeminiResponse(array $response): array
-    {
-        try {
-            // Extract text from Gemini response structure
-            $text = $response['candidates'][0]['content']['parts'][0]['text'] ?? '';
-            
-            // Remove markdown code blocks if present
-            $text = preg_replace('/```json\s*|\s*```/', '', $text);
-            $text = trim($text);
-            
-            // Parse JSON
-            $data = json_decode($text, true);
-            
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception('Invalid JSON response from AI: ' . json_last_error_msg());
-            }
-            
-            // Validate structure
-            if (!isset($data['customer_jobs']) || !isset($data['customer_pains']) || !isset($data['customer_gains'])) {
-                throw new Exception('Missing required fields in AI response');
-            }
-            
-            return [
-                'customer_jobs' => array_values($data['customer_jobs']),
-                'customer_pains' => array_values($data['customer_pains']),
-                'customer_gains' => array_values($data['customer_gains']),
-                'reasoning' => $data['reasoning'] ?? 'No reasoning provided',
-            ];
-            
-        } catch (Exception $e) {
-            Log::error('Failed to parse Gemini response: ' . $e->getMessage());
-            throw new Exception('Failed to parse AI response. Please try again.');
-        }
+Generate 3-5 points for each type. Be specific and actionable.
+PROMPT;
     }
 }

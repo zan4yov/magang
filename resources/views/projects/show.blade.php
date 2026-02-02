@@ -23,10 +23,12 @@
                 </p>
             </div>
             <div style="display: flex; gap: 0.75rem;">
-                @if($project->user_id === Auth::id())
+                @if($project->canEdit(Auth::user()))
                     <a href="{{ route('projects.edit', $project->id) }}" class="btn" style="background: #7CB342; color: #ffffff;">
                         Edit Project
                     </a>
+                @endif
+                @if($project->user_id === Auth::id())
                     <form method="POST" action="{{ route('projects.destroy', $project->id) }}" style="display: inline;" onsubmit="return confirm('Move this project to trash?');">
                         @csrf
                         @method('DELETE')

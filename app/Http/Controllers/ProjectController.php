@@ -108,8 +108,8 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
         
-        if (!$this->canAccess($project)) {
-            abort(403);
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
         }
 
         $validated = $request->validate([
@@ -132,7 +132,7 @@ class ProjectController extends Controller
             'empathy_map_completed' => true,
         ]);
 
-        // Generate customer profile using AI
+        // Generate customer profile using AI (MANDATORY)
         try {
             $geminiService = app(\App\Services\GeminiService::class);
             $customerProfile = $geminiService->generateCustomerProfile([
@@ -146,13 +146,20 @@ class ProjectController extends Controller
                 'customer_jobs' => $customerProfile['customer_jobs'],
                 'customer_pains' => $customerProfile['customer_pains'],
                 'customer_gains' => $customerProfile['customer_gains'],
-                'ai_reasoning' => $customerProfile['reasoning'],
+                'ai_reasoning' => $customerProfile['reasoning'] ?? 'AI-generated customer profile based on empathy map analysis',
                 'customer_profile_generated' => true,
             ]);
 
-            return redirect()->route('projects.customer-profile', $project->id);
+            return redirect()->route('projects.customer-profile', $project->id)
+                ->with('success', 'Customer profile generated successfully by AI!');
+                
         } catch (\Exception $e) {
-            return back()->withErrors(['error' => 'AI generation failed: ' . $e->getMessage()]);
+            // AI is mandatory - show error and ask user to retry
+            \Log::error('AI VPC generation failed for project ' . $project->id . ': ' . $e->getMessage());
+            
+            return back()
+                ->withInput()
+                ->withErrors(['ai_error' => 'AI generation failed: ' . $e->getMessage() . ' Please wait a moment and try again.']);
         }
     }
 
@@ -173,32 +180,42 @@ class ProjectController extends Controller
     }
 
     /**
-     * Update a customer profile item
+     * Update or add a customer profile item
      */
     public function updateCustomerProfileItem(Request $request, $id)
     {
         $project = Project::findOrFail($id);
         
-        if (!$this->canAccess($project)) {
-            abort(403);
+        // Only users with edit permission can update profile items
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
         }
 
         $validated = $request->validate([
             'type' => 'required|in:customer_jobs,customer_pains,customer_gains',
-            'index' => 'required|integer|min:0',
+            'index' => 'required|integer|min:-1',
             'value' => 'required|string',
         ]);
 
         $data = $project->{$validated['type']} ?? [];
         
-        if (isset($data[$validated['index']])) {
+        if ($validated['index'] == -1) {
+            // Adding a new item
+            $data[] = $validated['value'];
+            $project->update([
+                $validated['type'] => $data,
+            ]);
+            return back()->with('success', 'Item added successfully');
+        } elseif (isset($data[$validated['index']])) {
+            // Editing existing item
             $data[$validated['index']] = $validated['value'];
             $project->update([
                 $validated['type'] => $data,
             ]);
+            return back()->with('success', 'Item updated successfully');
         }
 
-        return back()->with('success', 'Item updated successfully');
+        return back()->with('error', 'Item not found');
     }
 
     /**
@@ -208,8 +225,9 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
         
-        if (!$this->canAccess($project)) {
-            abort(403);
+        // Only users with edit permission can delete profile items
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
         }
 
         $validated = $request->validate([
@@ -237,8 +255,8 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
         
-        if (!$this->canAccess($project)) {
-            abort(403);
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
         }
 
         try {
@@ -267,8 +285,8 @@ class ProjectController extends Controller
     {
         $project = Project::findOrFail($id);
         
-        if (!$this->canAccess($project)) {
-            abort(403);
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
         }
 
         $project->update(['is_draft' => false]);

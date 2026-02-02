@@ -106,21 +106,16 @@
                     @forelse($projects as $project)
                     <tr>
                         <td>
-                            <div style="font-weight: 500; color: #1f2937;">{{ $project->title }}</div>
-                            @if($project->description)
-                                <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
-                                    {{ Str::limit($project->description, 60) }}
-                                </div>
-                            @endif
+                            <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem;">{{ Str::limit($project->title, 50) }}</div>
                         </td>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.875rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.875rem; flex-shrink: 0;">
                                     {{ substr($project->user->name, 0, 1) }}
                                 </div>
-                                <div>
-                                    <div style="font-weight: 500;">{{ $project->user->name }}</div>
-                                    <div style="font-size: 0.75rem; color: #6b7280;">{{ $project->user->email }}</div>
+                                <div style="min-width: 0;">
+                                    <div style="font-weight: 500; font-size: 0.9rem; color: #1f2937;">{{ $project->user->name }}</div>
+                                    <div style="font-size: 0.8rem; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $project->user->email }}">{{ $project->user->email }}</div>
                                 </div>
                             </div>
                         </td>
@@ -139,30 +134,29 @@
                                     'other' => 'Other'
                                 ];
                             @endphp
-                            <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500; background: {{ $categoryColors[$project->category] }}20; color: {{ $categoryColors[$project->category] }};">
+                            <span style="display: inline-block; padding: 0.375rem 0.875rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; background: {{ $categoryColors[$project->category] }}20; color: {{ $categoryColors[$project->category] }};">
                                 {{ $categoryLabels[$project->category] }}
                             </span>
                         </td>
                         <td>
                             @if($project->deleted_at)
-                                <span class="role-badge" style="background: #fee2e2; color: #dc2626;">Trashed</span>
+                                <span style="display: inline-block; padding: 0.375rem 0.875rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; background: #fee2e2; color: #dc2626;">Trashed</span>
                             @elseif($project->is_draft)
-                                <span class="role-badge" style="background: #fff3e0; color: #f57c00;">Draft</span>
+                                <span style="display: inline-block; padding: 0.375rem 0.875rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; background: #fff3e0; color: #f57c00;">Draft</span>
                             @else
-                                <span class="role-badge role-mining-tech">Completed</span>
+                                <span style="display: inline-block; padding: 0.375rem 0.875rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; background: #d1fae5; color: #065f46;">Completed</span>
                             @endif
                         </td>
                         <td>
-                            <div>{{ $project->created_at->format('d M Y') }}</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">{{ $project->created_at->format('H:i') }}</div>
+                            <div style="font-size: 0.9rem; color: #374151;">{{ $project->created_at->format('d M Y, H:i') }}</div>
                         </td>
                         <td>
-                            <div>{{ $project->updated_at->format('d M Y') }}</div>
-                            <div style="font-size: 0.75rem; color: #6b7280;">{{ $project->updated_at->diffForHumans() }}</div>
+                            <div style="font-size: 0.9rem; color: #374151;">{{ $project->updated_at->format('d M Y') }}</div>
+                            <div style="font-size: 0.8rem; color: #9ca3af;">{{ $project->updated_at->diffForHumans() }}</div>
                         </td>
                         <td style="text-align: center;">
-                            <a href="{{ route('admin.projects.show', $project->id) }}" class="action-btn action-btn-edit" title="View Project">
-                                <svg fill="currentColor" viewBox="0 0 20 20" style="width: 16px; height: 16px;">
+                            <a href="{{ route('admin.projects.show', $project->id) }}" class="action-btn action-btn-view" title="View Project" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem; background: #e3f2fd; color: #2196F3; border-radius: 8px; text-decoration: none; transition: all 0.2s;">
+                                <svg fill="currentColor" viewBox="0 0 20 20" style="width: 18px; height: 18px;">
                                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
                                     <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
                                 </svg>
@@ -205,6 +199,20 @@
     justify-content: center;
     font-weight: 600;
     font-size: 1rem;
+}
+
+.action-btn-view:hover {
+    background: #2196F3 !important;
+    color: #ffffff !important;
+    transform: scale(1.1);
+}
+
+.activity-table tbody tr {
+    transition: background-color 0.2s;
+}
+
+.activity-table tbody tr:hover {
+    background-color: #f9fafb;
 }
 </style>
 @endsection
