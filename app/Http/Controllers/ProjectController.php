@@ -132,7 +132,7 @@ class ProjectController extends Controller
             'empathy_map_completed' => true,
         ]);
 
-        // Generate customer profile using AI (MANDATORY)
+        // Generate customer profile using AI with ReAct reasoning (MANDATORY)
         try {
             $geminiService = app(\App\Services\GeminiService::class);
             $customerProfile = $geminiService->generateCustomerProfile([
@@ -146,12 +146,15 @@ class ProjectController extends Controller
                 'customer_jobs' => $customerProfile['customer_jobs'],
                 'customer_pains' => $customerProfile['customer_pains'],
                 'customer_gains' => $customerProfile['customer_gains'],
-                'ai_reasoning' => $customerProfile['reasoning'] ?? 'AI-generated customer profile based on empathy map analysis',
+                'ai_reasoning' => $customerProfile['reasoning'] ?? 'AI-generated customer profile with ReAct reasoning',
+                'reasoning_layer1' => $customerProfile['reasoning_trace'] ?? [],
                 'customer_profile_generated' => true,
+                'customer_profile_approved' => false, // Needs user approval
+                'project_status' => 'draft', // Still in draft until approved
             ]);
 
             return redirect()->route('projects.customer-profile', $project->id)
-                ->with('success', 'Customer profile generated successfully by AI!');
+                ->with('success', 'Customer profile generated with ReAct reasoning! Please review and approve to continue.');
                 
         } catch (\Exception $e) {
             // AI is mandatory - show error and ask user to retry
@@ -269,7 +272,9 @@ class ProjectController extends Controller
                 'customer_jobs' => $customerProfile['customer_jobs'],
                 'customer_pains' => $customerProfile['customer_pains'],
                 'customer_gains' => $customerProfile['customer_gains'],
-                'ai_reasoning' => $customerProfile['reasoning'],
+                'ai_reasoning' => $customerProfile['reasoning'] ?? 'AI-generated customer profile with ReAct reasoning',
+                'reasoning_layer1' => $customerProfile['reasoning_trace'] ?? [],
+                'customer_profile_approved' => false, // Reset approval on regenerate
             ]);
 
             return back()->with('success', 'Customer profile regenerated successfully');
@@ -279,7 +284,219 @@ class ProjectController extends Controller
     }
 
     /**
+     * Approve customer profile and immediately generate Value Map
+     */
+    public function approveCustomerProfile($id)
+    {
+        $project = Project::findOrFail($id);
+        
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
+        }
+
+        if (!$project->hasCustomerProfile()) {
+            return back()->withErrors(['error' => 'Customer profile must be generated before approval.']);
+        }
+
+        // 1. Mark as approved
+        $project->update([
+            'customer_profile_approved' => true,
+            'project_status' => 'progress',
+        ]);
+
+        // 2. Automatically generate Value Map
+        try {
+            $geminiService = app(\App\Services\GeminiService::class);
+            $valueMap = $geminiService->generateValueMap($project->getCustomerProfileData());
+
+            $project->update([
+                'products_services' => $valueMap['products_services'],
+                'pain_relievers' => $valueMap['pain_relievers'],
+                'gain_creators' => $valueMap['gain_creators'],
+                'reasoning_layer2' => $valueMap['reasoning_trace'] ?? [],
+                'value_map_generated' => true,
+                'project_status' => 'complete',
+                'is_draft' => false,
+            ]);
+
+            return redirect()->route('projects.value-map', $project->id)
+                ->with('success', 'Customer profile approved and Value Map generated successfully!');
+
+        } catch (\Exception $e) {
+            // If generation fails, we still approved the profile, but warn the user
+            \Log::error('Auto-generation of Value Map failed for project ' . $project->id . ': ' . $e->getMessage());
+            
+            return redirect()->route('projects.value-map', $project->id)
+                ->with('warning', 'Customer profile approved, but auto-generation failed: ' . $e->getMessage() . '. Please try generating manually.');
+        }
+    }
+
+    /**
+     * Show Value Map (Step 4)
+     */
+    public function showValueMap($id)
+    {
+        $project = Project::findOrFail($id);
+        
+        if (!$this->canAccess($project)) {
+            abort(403);
+        }
+
+        $customerProfile = $project->getCustomerProfileData();
+        $valueMap = $project->getValueMapData();
+
+        return view('projects.wizard.step4', compact('project', 'customerProfile', 'valueMap'));
+    }
+
+    /**
+     * Generate Value Map from approved Customer Profile using ReAct reasoning
+     */
+    public function generateValueMap($id)
+    {
+        $project = Project::findOrFail($id);
+        
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
+        }
+
+        if (!$project->canGenerateValueMap()) {
+            return back()->withErrors(['error' => 'Customer profile must be approved first.']);
+        }
+
+        try {
+            $geminiService = app(\App\Services\GeminiService::class);
+            $valueMap = $geminiService->generateValueMap($project->getCustomerProfileData());
+
+            $project->update([
+                'products_services' => $valueMap['products_services'],
+                'pain_relievers' => $valueMap['pain_relievers'],
+                'gain_creators' => $valueMap['gain_creators'],
+                'reasoning_layer2' => $valueMap['reasoning_trace'] ?? [],
+                'value_map_generated' => true,
+                'project_status' => 'complete',
+                'is_draft' => false,
+            ]);
+
+            return redirect()->route('projects.value-map', $project->id)
+                ->with('success', 'Value Map generated successfully with ReAct reasoning!');
+                
+        } catch (\Exception $e) {
+            \Log::error('AI Value Map generation failed for project ' . $project->id . ': ' . $e->getMessage());
+            
+            return back()->withErrors(['ai_error' => 'AI generation failed: ' . $e->getMessage() . ' Please try again.']);
+        }
+    }
+
+    /**
+     * Regenerate Value Map with AI
+     */
+    public function regenerateValueMap($id)
+    {
+        $project = Project::findOrFail($id);
+        
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
+        }
+
+        try {
+            $geminiService = app(\App\Services\GeminiService::class);
+            $valueMap = $geminiService->generateValueMap($project->getCustomerProfileData());
+
+            $project->update([
+                'products_services' => $valueMap['products_services'],
+                'pain_relievers' => $valueMap['pain_relievers'],
+                'gain_creators' => $valueMap['gain_creators'],
+                'reasoning_layer2' => $valueMap['reasoning_trace'] ?? [],
+            ]);
+
+            return back()->with('success', 'Value Map regenerated successfully!');
+        } catch (\Exception $e) {
+            return back()->withErrors(['error' => 'AI generation failed: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Step back from Value Map to Customer Profile
+     */
+    public function stepBackToCustomerProfile($id)
+    {
+        $project = Project::findOrFail($id);
+        
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
+        }
+
+        $project->update([
+            'customer_profile_approved' => false,
+            'project_status' => 'draft',
+        ]);
+
+        return redirect()->route('projects.customer-profile', $project->id)
+            ->with('info', 'Stepped back to Customer Profile. You can edit and re-approve.');
+    }
+
+    /**
+     * Update or add a Value Map item
+     */
+    public function updateValueMapItem(Request $request, $id)
+    {
+        $project = Project::findOrFail($id);
+        
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
+        }
+
+        $validated = $request->validate([
+            'type' => 'required|in:products_services,pain_relievers,gain_creators',
+            'index' => 'required|integer|min:-1',
+            'value' => 'required|string',
+        ]);
+
+        $data = $project->{$validated['type']} ?? [];
+        
+        if ($validated['index'] == -1) {
+            $data[] = $validated['value'];
+            $project->update([$validated['type'] => $data]);
+            return back()->with('success', 'Item added successfully');
+        } elseif (isset($data[$validated['index']])) {
+            $data[$validated['index']] = $validated['value'];
+            $project->update([$validated['type'] => $data]);
+            return back()->with('success', 'Item updated successfully');
+        }
+
+        return back()->with('error', 'Item not found');
+    }
+
+    /**
+     * Delete a Value Map item
+     */
+    public function deleteValueMapItem(Request $request, $id)
+    {
+        $project = Project::findOrFail($id);
+        
+        if (!$project->canEdit(Auth::user())) {
+            abort(403, 'You do not have permission to edit this project.');
+        }
+
+        $validated = $request->validate([
+            'type' => 'required|in:products_services,pain_relievers,gain_creators',
+            'index' => 'required|integer|min:0',
+        ]);
+
+        $data = $project->{$validated['type']} ?? [];
+        
+        if (isset($data[$validated['index']])) {
+            unset($data[$validated['index']]);
+            $data = array_values($data);
+            $project->update([$validated['type'] => $data]);
+        }
+
+        return back()->with('success', 'Item deleted successfully');
+    }
+
+    /**
      * Finalize project (mark as complete, not draft)
+     * @deprecated Use approveCustomerProfile + generateValueMap flow instead
      */
     public function finalizeProject($id)
     {
@@ -289,7 +506,10 @@ class ProjectController extends Controller
             abort(403, 'You do not have permission to edit this project.');
         }
 
-        $project->update(['is_draft' => false]);
+        $project->update([
+            'is_draft' => false,
+            'project_status' => 'complete',
+        ]);
 
         return redirect()->route('projects.index')
             ->with('success', 'Project completed successfully!');

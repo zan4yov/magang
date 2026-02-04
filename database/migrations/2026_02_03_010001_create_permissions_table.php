@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasTable('password_reset_codes')) {
-            Schema::create('password_reset_codes', function (Blueprint $table) {
+        if (!Schema::hasTable('permissions')) {
+            Schema::create('permissions', function (Blueprint $table) {
                 $table->id();
-                $table->string('email')->index();
-                $table->string('code', 6);
-                $table->timestamp('expires_at');
+                $table->string('name', 50)->unique();
                 $table->timestamps();
             });
         }
@@ -27,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('password_reset_codes');
+        Schema::dropIfExists('permissions');
     }
 };

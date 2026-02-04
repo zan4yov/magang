@@ -20,7 +20,7 @@ class DashboardController extends Controller
             $stats = [
                 'total_users' => \App\Models\User::count(),
                 'total_users_last_month' => \App\Models\User::where('created_at', '>=', now()->subMonth())->count(),
-                'active_users_24h' => \App\Models\User::where('updated_at', '>=', now()->subDay())->count(),
+                'active_users_now' => \App\Models\User::getOnlineCount(5), // Online in last 5 minutes
                 'users_by_role' => [
                     'user' => \App\Models\User::where('role', 'user')->count(),
                     'mining_tech' => \App\Models\User::where('role', 'mining_tech')->count(),

@@ -55,6 +55,19 @@ Route::middleware('auth')->group(function () {
     Route::put('/projects/{id}/customer-profile/item', [\App\Http\Controllers\ProjectController::class, 'updateCustomerProfileItem'])->name('projects.customer-profile.update-item');
     Route::delete('/projects/{id}/customer-profile/item', [\App\Http\Controllers\ProjectController::class, 'deleteCustomerProfileItem'])->name('projects.customer-profile.delete-item');
     Route::post('/projects/{id}/customer-profile/regenerate', [\App\Http\Controllers\ProjectController::class, 'regenerateCustomerProfile'])->name('projects.customer-profile.regenerate');
+    Route::post('/projects/{id}/customer-profile/approve', [\App\Http\Controllers\ProjectController::class, 'approveCustomerProfile'])->name('projects.customer-profile.approve');
+    
+    // Value Map routes (Step 4)
+    Route::get('/projects/{id}/value-map', [\App\Http\Controllers\ProjectController::class, 'showValueMap'])->name('projects.value-map');
+    Route::post('/projects/{id}/value-map/generate', [\App\Http\Controllers\ProjectController::class, 'generateValueMap'])->name('projects.value-map.generate');
+    Route::post('/projects/{id}/value-map/regenerate', [\App\Http\Controllers\ProjectController::class, 'regenerateValueMap'])->name('projects.value-map.regenerate');
+    Route::put('/projects/{id}/value-map/item', [\App\Http\Controllers\ProjectController::class, 'updateValueMapItem'])->name('projects.value-map.update-item');
+    Route::delete('/projects/{id}/value-map/item', [\App\Http\Controllers\ProjectController::class, 'deleteValueMapItem'])->name('projects.value-map.delete-item');
+    
+    // Step-back functionality
+    Route::post('/projects/{id}/stepback/customer-profile', [\App\Http\Controllers\ProjectController::class, 'stepBackToCustomerProfile'])->name('projects.stepback.customer-profile');
+    
+    // Finalize project (legacy route - prefer Value Map flow)
     Route::post('/projects/{id}/finalize', [\App\Http\Controllers\ProjectController::class, 'finalizeProject'])->name('projects.finalize');
 });
 

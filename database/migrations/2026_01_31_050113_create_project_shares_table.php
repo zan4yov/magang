@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('project_shares', function (Blueprint $table) {
+        if (!Schema::hasTable('project_shares')) {
+            Schema::create('project_shares', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained()->onDelete('cascade');
             $table->foreignId('shared_with_user_id')->constrained('users')->onDelete('cascade');
@@ -21,6 +22,7 @@ return new class extends Migration
             // Unique constraint: one share per user per project
             $table->unique(['project_id', 'shared_with_user_id']);
         });
+        }
     }
 
     /**

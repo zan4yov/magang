@@ -30,9 +30,20 @@ class Project extends Model
         'customer_pains',
         'customer_gains',
         'ai_reasoning',
+        // Value Map fields (VPC right side)
+        'products_services',
+        'pain_relievers',
+        'gain_creators',
         // Wizard tracking
         'empathy_map_completed',
         'customer_profile_generated',
+        'customer_profile_approved',
+        'value_map_generated',
+        // Project status (draft, progress, complete)
+        'project_status',
+        // ReAct reasoning traces
+        'reasoning_layer1',
+        'reasoning_layer2',
     ];
 
     protected $casts = [
@@ -46,8 +57,15 @@ class Project extends Model
         'customer_jobs' => 'array',
         'customer_pains' => 'array',
         'customer_gains' => 'array',
+        'products_services' => 'array',
+        'pain_relievers' => 'array',
+        'gain_creators' => 'array',
+        'reasoning_layer1' => 'array',
+        'reasoning_layer2' => 'array',
         'empathy_map_completed' => 'boolean',
         'customer_profile_generated' => 'boolean',
+        'customer_profile_approved' => 'boolean',
+        'value_map_generated' => 'boolean',
     ];
 
     /**
@@ -182,6 +200,93 @@ class Project extends Model
             'customer_pains' => $this->customer_pains ?? [],
             'customer_gains' => $this->customer_gains ?? [],
             'reasoning' => $this->ai_reasoning ?? '',
+            'reasoning_trace' => $this->reasoning_layer1 ?? [],
         ];
+    }
+
+    /**
+     * Check if project has Value Map data
+     */
+    public function hasValueMap(): bool
+    {
+        return $this->value_map_generated && 
+               !empty($this->products_services) && 
+               !empty($this->pain_relievers) && 
+               !empty($this->gain_creators);
+    }
+
+    /**
+     * Get Value Map data as array
+     */
+    public function getValueMapData(): array
+    {
+        return [
+            'products_services' => $this->products_services ?? [],
+            'pain_relievers' => $this->pain_relievers ?? [],
+            'gain_creators' => $this->gain_creators ?? [],
+            'reasoning_trace' => $this->reasoning_layer2 ?? [],
+        ];
+    }
+
+    /**
+     * Check if Customer Profile is approved for Value Map generation
+     */
+    public function canGenerateValueMap(): bool
+    {
+        return $this->customer_profile_approved && 
+               $this->hasCustomerProfile();
+    }
+
+    /**
+     * Get current project status with details
+     */
+    public function getStatusDetails(): array
+    {
+        $status = $this->project_status ?? 'draft';
+        
+        $statusMap = [
+            'draft' => [
+                'label' => 'Draft',
+                'color' => '#f59e0b',
+                'icon' => 'pencil',
+                'description' => 'Project is being created',
+            ],
+            'progress' => [
+                'label' => 'In Progress',
+                'color' => '#3b82f6',
+                'icon' => 'clock',
+                'description' => 'Customer Profile approved, awaiting Value Map',
+            ],
+            'complete' => [
+                'label' => 'Complete',
+                'color' => '#10b981',
+                'icon' => 'check',
+                'description' => 'Value Map generated',
+            ],
+        ];
+
+        return $statusMap[$status] ?? $statusMap['draft'];
+    }
+
+    /**
+     * Update project status based on current state
+     */
+    public function updateProjectStatus(): void
+    {
+        if ($this->hasValueMap()) {
+            $this->update(['project_status' => 'complete', 'is_draft' => false]);
+        } elseif ($this->customer_profile_approved && $this->hasCustomerProfile()) {
+            $this->update(['project_status' => 'progress', 'is_draft' => true]);
+        } else {
+            $this->update(['project_status' => 'draft', 'is_draft' => true]);
+        }
+    }
+
+    /**
+     * Scope: Get projects by status
+     */
+    public function scopeByStatus($query, string $status)
+    {
+        return $query->where('project_status', $status);
     }
 }

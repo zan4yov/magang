@@ -30,13 +30,16 @@
     <!-- Tab Navigation -->
     <div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 0;">
         <button class="tab-btn active" data-tab="info" onclick="switchTab('info')">
-            📋 Project Info
+             Project Info
         </button>
         <button class="tab-btn" data-tab="empathy" onclick="switchTab('empathy')">
-            🧠 Empathy Map
+             Empathy Map
         </button>
         <button class="tab-btn" data-tab="profile" onclick="switchTab('profile')">
-            👤 Customer Profile
+             Customer Profile
+        </button>
+        <button class="tab-btn" data-tab="value-map" onclick="switchTab('value-map')">
+             Value Map
         </button>
     </div>
 
@@ -95,7 +98,7 @@
             <!-- Says -->
             <div class="empathy-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="background: #3b82f6; color: #ffffff; padding: 1rem 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.125rem;">💬 Says</h3>
+                    <h3 style="margin: 0; font-size: 1.125rem;"> Says</h3>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">What the user says out loud</p>
                 </div>
                 <div style="padding: 1.5rem;">
@@ -110,7 +113,7 @@
             <!-- Thinks -->
             <div class="empathy-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="background: #8b5cf6; color: #ffffff; padding: 1rem 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.125rem;">💭 Thinks</h3>
+                    <h3 style="margin: 0; font-size: 1.125rem;"> Thinks</h3>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">What the user thinks privately</p>
                 </div>
                 <div style="padding: 1.5rem;">
@@ -125,7 +128,7 @@
             <!-- Does -->
             <div class="empathy-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="background: #10b981; color: #ffffff; padding: 1rem 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.125rem;">🎯 Does</h3>
+                    <h3 style="margin: 0; font-size: 1.125rem;"> Does</h3>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">Actions and behaviors</p>
                 </div>
                 <div style="padding: 1.5rem;">
@@ -140,7 +143,7 @@
             <!-- Feels -->
             <div class="empathy-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="background: #ef4444; color: #ffffff; padding: 1rem 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.125rem;">❤️ Feels</h3>
+                    <h3 style="margin: 0; font-size: 1.125rem;"> Feels</h3>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">Emotions and feelings</p>
                 </div>
                 <div style="padding: 1.5rem;">
@@ -179,7 +182,7 @@
             <!-- Customer Jobs -->
             <div class="profile-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="background: #3b82f6; color: #ffffff; padding: 1.25rem 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;">⚙️ Customer Jobs</h3>
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;"> Customer Jobs</h3>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">What they're trying to accomplish</p>
                 </div>
                 <div style="padding: 1.5rem;">
@@ -196,7 +199,7 @@
             <!-- Pains -->
             <div class="profile-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="background: #ef4444; color: #ffffff; padding: 1.25rem 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;">😰 Pains</h3>
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;"> Pains</h3>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">Frustrations and obstacles</p>
                 </div>
                 <div style="padding: 1.5rem;">
@@ -213,7 +216,7 @@
             <!-- Gains -->
             <div class="profile-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
                 <div style="background: #10b981; color: #ffffff; padding: 1.25rem 1.5rem;">
-                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;">😊 Gains</h3>
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;"> Gains</h3>
                     <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">Desired outcomes and benefits</p>
                 </div>
                 <div style="padding: 1.5rem;">
@@ -268,6 +271,123 @@
                 <a href="{{ route('projects.empathy-map', $project->id) }}" class="btn btn-primary">
                     Start with Empathy Map
                 </a>
+            @endif
+        </div>
+        @endif
+    </div>
+
+    <!-- Tab Content: Value Map -->
+    <div id="tab-value-map" class="tab-content" style="display: none;">
+        @if($project->value_map_generated)
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+            <!-- Products & Services -->
+            <div class="profile-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="background: #7c3aed; color: #ffffff; padding: 1.25rem 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;"> Products & Services</h3>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">Solutions that enable customer jobs</p>
+                </div>
+                <div style="padding: 1.5rem;">
+                    @forelse($project->products_services ?? [] as $item)
+                        <div style="background: #f5f3ff; border-left: 3px solid #7c3aed; padding: 0.875rem 1rem; margin-bottom: 0.75rem; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #5b21b6; line-height: 1.5;">
+                            {{ $item }}
+                        </div>
+                    @empty
+                        <p style="color: #9ca3af; text-align: center;">No products defined</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Pain Relievers -->
+            <div class="profile-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="background: #ef4444; color: #ffffff; padding: 1.25rem 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;"> Pain Relievers</h3>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">How we eliminate or reduce pains</p>
+                </div>
+                <div style="padding: 1.5rem;">
+                    @forelse($project->pain_relievers ?? [] as $item)
+                        <div style="background: #fef2f2; border-left: 3px solid #ef4444; padding: 0.875rem 1rem; margin-bottom: 0.75rem; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #991b1b; line-height: 1.5;">
+                            {{ $item }}
+                        </div>
+                    @empty
+                        <p style="color: #9ca3af; text-align: center;">No pain relievers defined</p>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- Gain Creators -->
+            <div class="profile-card" style="background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="background: #10b981; color: #ffffff; padding: 1.25rem 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.125rem; font-weight: 600;"> Gain Creators</h3>
+                    <p style="margin: 0.25rem 0 0 0; font-size: 0.875rem; opacity: 0.9;">How we create expected gains</p>
+                </div>
+                <div style="padding: 1.5rem;">
+                    @forelse($project->gain_creators ?? [] as $item)
+                        <div style="background: #ecfdf5; border-left: 3px solid #10b981; padding: 0.875rem 1rem; margin-bottom: 0.75rem; border-radius: 0 8px 8px 0; font-size: 0.95rem; color: #065f46; line-height: 1.5;">
+                            {{ $item }}
+                        </div>
+                    @empty
+                        <p style="color: #9ca3af; text-align: center;">No gain creators defined</p>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Reasoning for Value Map -->
+        @if(!empty($project->reasoning_layer2))
+        <div style="background: #ffffff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-top: 1.5rem;">
+            <details>
+                <summary style="cursor: pointer; font-weight: 600; color: #1f2937; font-size: 1rem;">
+                     Value Map Reasoning Trace
+                </summary>
+                <div style="margin-top: 1rem;">
+                    @foreach($project->reasoning_layer2 as $step)
+                        <div style="background: #f9fafb; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; border-left: 3px solid #7c3aed;">
+                            <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">
+                                Step {{ $step['step'] ?? 'N/A' }}: {{ $step['phase'] ?? 'Analysis' }}
+                            </div>
+                            <div style="font-size: 0.875rem; color: #4b5563; line-height: 1.6;">
+                                <strong>OBSERVE:</strong> {{ $step['observe'] ?? 'N/A' }}<br>
+                                <strong>THINK:</strong> {{ $step['think'] ?? 'N/A' }}<br>
+                                <strong>ACT:</strong> {{ $step['act'] ?? 'N/A' }}
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </details>
+        </div>
+        @endif
+
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center;">
+            <a href="{{ route('projects.value-map', $project->id) }}" class="btn" style="background: #7CB342; color: #ffffff;">
+                ✏️ Edit Value Map
+            </a>
+            <form method="POST" action="{{ route('projects.value-map.regenerate', $project->id) }}" style="display: inline;">
+                @csrf
+                <button type="submit" class="btn" style="background: #f59e0b; color: #ffffff;" onclick="return confirm('Regenerate will overwrite current value map. Continue?');">
+                    🔄 Regenerate with AI
+                </button>
+            </form>
+        </div>
+        @else
+        <div style="background: #ffffff; border-radius: 16px; padding: 3rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+            <svg style="width: 64px; height: 64px; margin: 0 auto 1rem; color: #d1d5db;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+            </svg>
+            <h3 style="color: #1f2937; font-size: 1.25rem; margin-bottom: 0.5rem;">No Value Map Yet</h3>
+            <p style="color: #6b7280; margin-bottom: 1.5rem;">Value Map is generated after Customer Profile is approved.</p>
+            @if($project->canGenerateValueMap())
+                <form method="POST" action="{{ route('projects.value-map.generate', $project->id) }}">
+                    @csrf
+                    <button type="submit" class="btn btn-primary">
+                        Generate Value Map
+                    </button>
+                </form>
+            @elseif($project->hasCustomerProfile())
+                <a href="{{ route('projects.customer-profile', $project->id) }}" class="btn btn-primary">
+                    Go to Customer Profile to Approve
+                </a>
+            @else
+                <p style="color: #ef4444; font-size: 0.9rem;">Please complete Customer Profile first.</p>
             @endif
         </div>
         @endif

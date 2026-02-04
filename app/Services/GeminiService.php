@@ -6,12 +6,20 @@ use Exception;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * GeminiService - AI API wrapper for VPC generation
+ * 
+ * This service acts as a facade that can use either:
+ * - Direct API calls (legacy mode)
+ * - ReasoningService for ReAct-based generation (enhanced mode)
+ */
 class GeminiService
 {
     protected string $provider;
     protected string $apiKey;
     protected string $model;
     protected int $maxRetries = 3;
+    protected bool $useReActReasoning = true;
 
     public function __construct()
     {
@@ -28,9 +36,25 @@ class GeminiService
 
     /**
      * Analyze empathy map and generate customer profile
+     * Uses ReAct reasoning when enabled
      */
     public function generateCustomerProfile(array $empathyData): array
     {
+        // Use ReAct-based reasoning for enhanced generation
+        if ($this->useReActReasoning) {
+            $reasoningService = app(ReasoningService::class);
+            $result = $reasoningService->generateCustomerProfileWithReasoning($empathyData);
+            
+            return [
+                'customer_jobs' => $result['customer_jobs'],
+                'customer_pains' => $result['customer_pains'],
+                'customer_gains' => $result['customer_gains'],
+                'reasoning' => $result['summary'] ?? '',
+                'reasoning_trace' => $result['reasoning_trace'] ?? [],
+            ];
+        }
+        
+        // Legacy mode (fallback)
         $prompt = $this->buildPrompt($empathyData);
         
         if ($this->provider === 'groq') {
@@ -38,6 +62,16 @@ class GeminiService
         }
         
         return $this->callGeminiApi($prompt);
+    }
+
+    /**
+     * Generate Value Map from approved Customer Profile
+     * Uses ReAct reasoning for systematic analysis
+     */
+    public function generateValueMap(array $customerProfile): array
+    {
+        $reasoningService = app(ReasoningService::class);
+        return $reasoningService->generateValueMapWithReasoning($customerProfile);
     }
 
     /**

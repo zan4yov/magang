@@ -5,20 +5,22 @@
 @section('content')
 <div class="dashboard-container">
     <!-- Header -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <div>
-            <h1 class="dashboard-title">User Management</h1>
-            <p class="dashboard-subtitle">Manage system users and roles</p>
+    <div class="dashboard-welcome" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h1 class="dashboard-title">User Management</h1>
+                <p class="dashboard-subtitle">Manage system users and roles</p>
+            </div>
+            <a href="{{ route('admin.users.create') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                <svg style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
+                </svg>
+                <span>Create New User</span>
+            </a>
         </div>
-        <a href="{{ route('admin.users.create') }}" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem;">
-            <svg style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
-            </svg>
-            <span>Create New User</span>
-        </a>
     </div>
 
-   <!-- Filters -->
+    <!-- Filters -->
     <div style="background: #ffffff; border-radius: 16px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
         <form method="GET" action="{{ route('admin.users.index') }}">
             <div style="display: grid; grid-template-columns: 1fr 200px auto; gap: 1rem; align-items: end;">
@@ -56,6 +58,38 @@
         </form>
     </div>
 
+    <!-- Stats Summary -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+        <div style="background: #e3f2fd; padding: 1rem; border-radius: 12px;">
+            <div style="font-size: 0.875rem; color: #1976D2; font-weight: 500;">Total Users</div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #2196F3;">{{ $users->total() }}</div>
+        </div>
+        <div style="background: #e8f5e9; padding: 1rem; border-radius: 12px;">
+            <div style="font-size: 0.875rem; color: #558B2F; font-weight: 500;">Online Now</div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #7CB342;">{{ \App\Models\User::getOnlineCount() }}</div>
+        </div>
+        <div style="background: #fff3e0; padding: 1rem; border-radius: 12px;">
+            <div style="font-size: 0.875rem; color: #F57C00; font-weight: 500;">Mining Tech</div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #FF9800;">{{ \App\Models\User::where('role', 'mining_tech')->count() }}</div>
+        </div>
+        <div style="background: #fce4ec; padding: 1rem; border-radius: 12px;">
+            <div style="font-size: 0.875rem; color: #C2185B; font-weight: 500;">Super Admins</div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #E91E63;">{{ \App\Models\User::where('role', 'super_admin')->count() }}</div>
+        </div>
+    </div>
+
+    @if(session('success'))
+        <div style="background: #d1fae5; border: 1px solid #10b981; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; color: #065f46;">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; color: #991b1b;">
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- Users Table -->
     <div style="background: #ffffff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
         <div class="activity-table-container">
@@ -65,8 +99,8 @@
                         <th>User</th>
                         <th>Email</th>
                         <th>Role</th>
+                        <th>Status</th>
                         <th>Joined</th>
-                        <th>Last Active</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -99,8 +133,20 @@
                                 <span class="role-badge role-user">User</span>
                             @endif
                         </td>
+                        <td>
+                            @if($user->isOnline())
+                                <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 6px; font-size: 0.85rem; font-weight: 600;">
+                                    <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%;"></span>
+                                    Online
+                                </span>
+                            @else
+                                <span style="display: inline-flex; align-items: center; gap: 0.375rem; padding: 0.375rem 0.75rem; background: #f3f4f6; color: #6b7280; border-radius: 6px; font-size: 0.85rem; font-weight: 500;">
+                                    <span style="width: 8px; height: 8px; background: #9ca3af; border-radius: 50%;"></span>
+                                    Offline
+                                </span>
+                            @endif
+                        </td>
                         <td>{{ $user->created_at->format('d M Y') }}</td>
-                        <td>{{ $user->updated_at->diffForHumans() }}</td>
                         <td>
                             <div style="display: flex; gap: 0.5rem;">
                                 @if($user->id !== auth()->id())
@@ -114,7 +160,7 @@
                                             <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
                                         </svg>
                                     </a>
-                                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                    <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user? This action cannot be undone.');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="action-btn action-btn-delete" title="Delete User">
@@ -192,6 +238,11 @@
     background: #f9fafb;
 }
 
+.user-avatar-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 .user-avatar {
     width: 40px;
     height: 40px;
@@ -204,6 +255,24 @@
     font-weight: 600;
     font-size: 1rem;
     flex-shrink: 0;
+}
+
+.online-indicator {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 12px;
+    height: 12px;
+    background: #22c55e;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
 }
 
 .action-btn {
@@ -249,27 +318,27 @@
     color: #ffffff;
 }
 
-.user-avatar-wrapper {
-    position: relative;
+.role-badge {
     display: inline-block;
+    padding: 0.375rem 0.875rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
-.online-indicator {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    width: 12px;
-    height: 12px;
-    background: #22c55e;
-    border: 2px solid #ffffff;
-    border-radius: 50%;
-    animation: pulse 2s infinite;
+.role-super-admin {
+    background: #fce4ec;
+    color: #C2185B;
 }
 
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-    70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+.role-mining-tech {
+    background: #e8f5e9;
+    color: #558B2F;
+}
+
+.role-user {
+    background: #e3f2fd;
+    color: #1976D2;
 }
 </style>
 @endsection

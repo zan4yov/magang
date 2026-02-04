@@ -88,35 +88,36 @@
     </div>
 
     <!-- Projects Table -->
-    <div style="background: #ffffff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
+    <div style="background: #ffffff; border-radius: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); padding: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #1f2937; margin: 0;">All Projects</h2>
+            <span style="font-size: 0.875rem; color: #6b7280;">{{ $projects->total() }} projects found</span>
+        </div>
+
         <div class="activity-table-container">
             <table class="activity-table">
                 <thead>
                     <tr>
-                        <th style="width: 30%;">Project Title</th>
-                        <th>Owner</th>
+                        <th>Project</th>
+                        <th>Created By</th>
                         <th>Category</th>
                         <th>Status</th>
                         <th>Created</th>
-                        <th>Last Updated</th>
-                        <th style="text-align: center;">Actions</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($projects as $project)
                     <tr>
                         <td>
-                            <div style="font-weight: 600; color: #1f2937; font-size: 0.95rem;">{{ Str::limit($project->title, 50) }}</div>
+                            <div style="font-weight: 500; color: #1f2937;">{{ Str::limit($project->title, 50) }}</div>
                         </td>
                         <td>
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.875rem; flex-shrink: 0;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.875rem;">
                                     {{ substr($project->user->name, 0, 1) }}
                                 </div>
-                                <div style="min-width: 0;">
-                                    <div style="font-weight: 500; font-size: 0.9rem; color: #1f2937;">{{ $project->user->name }}</div>
-                                    <div style="font-size: 0.8rem; color: #9ca3af; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $project->user->email }}">{{ $project->user->email }}</div>
-                                </div>
+                                <span>{{ $project->user->name }}</span>
                             </div>
                         </td>
                         <td>
@@ -134,29 +135,23 @@
                                     'other' => 'Other'
                                 ];
                             @endphp
-                            <span style="display: inline-block; padding: 0.375rem 0.875rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; background: {{ $categoryColors[$project->category] }}20; color: {{ $categoryColors[$project->category] }};">
+                            <span style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.875rem; font-weight: 500; background: {{ $categoryColors[$project->category] }}20; color: {{ $categoryColors[$project->category] }};">
                                 {{ $categoryLabels[$project->category] }}
                             </span>
                         </td>
                         <td>
                             @if($project->deleted_at)
-                                <span style="display: inline-block; padding: 0.375rem 0.875rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; background: #fee2e2; color: #dc2626;">Trashed</span>
+                                <span class="role-badge" style="background: #fee2e2; color: #dc2626;">Trashed</span>
                             @elseif($project->is_draft)
-                                <span style="display: inline-block; padding: 0.375rem 0.875rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; background: #fff3e0; color: #f57c00;">Draft</span>
+                                <span class="role-badge" style="background: #fff3e0; color: #f57c00;">Draft</span>
                             @else
-                                <span style="display: inline-block; padding: 0.375rem 0.875rem; border-radius: 6px; font-size: 0.85rem; font-weight: 600; background: #d1fae5; color: #065f46;">Completed</span>
+                                <span class="role-badge role-mining-tech">Completed</span>
                             @endif
                         </td>
+                        <td>{{ $project->created_at->format('d M Y') }}</td>
                         <td>
-                            <div style="font-size: 0.9rem; color: #374151;">{{ $project->created_at->format('d M Y, H:i') }}</div>
-                        </td>
-                        <td>
-                            <div style="font-size: 0.9rem; color: #374151;">{{ $project->updated_at->format('d M Y') }}</div>
-                            <div style="font-size: 0.8rem; color: #9ca3af;">{{ $project->updated_at->diffForHumans() }}</div>
-                        </td>
-                        <td style="text-align: center;">
-                            <a href="{{ route('admin.projects.show', $project->id) }}" class="action-btn action-btn-view" title="View Project" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem; background: #e3f2fd; color: #2196F3; border-radius: 8px; text-decoration: none; transition: all 0.2s;">
-                                <svg fill="currentColor" viewBox="0 0 20 20" style="width: 18px; height: 18px;">
+                            <a href="{{ route('admin.projects.show', $project->id) }}" class="action-btn" style="background: #e3f2fd; color: #2196F3;" title="View Project">
+                                <svg fill="currentColor" viewBox="0 0 20 20" style="width: 16px; height: 16px;">
                                     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
                                     <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
                                 </svg>
@@ -165,12 +160,12 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" style="text-align: center; padding: 3rem; color: #6b7280;">
+                        <td colspan="6" style="text-align: center; padding: 3rem; color: #6b7280;">
                             <svg style="width: 48px; height: 48px; margin: 0 auto 1rem; opacity: 0.5;" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z"/>
                             </svg>
-                            <div style="font-size: 1.125rem; font-weight: 500; margin-bottom: 0.5rem;">No projects found</div>
-                            <div style="font-size: 0.95rem;">Try adjusting your filters or search criteria</div>
+                            <div style="font-weight: 500; margin-bottom: 0.5rem;">No projects found</div>
+                            <div style="font-size: 0.875rem;">Try adjusting your filters or search criteria</div>
                         </td>
                     </tr>
                     @endforelse
@@ -180,7 +175,7 @@
 
         <!-- Pagination -->
         @if($projects->hasPages())
-        <div style="padding: 1.5rem; border-top: 1px solid #e5e7eb;">
+        <div style="padding: 1.5rem 0 0 0; border-top: 1px solid #e5e7eb; margin-top: 1.5rem;">
             {{ $projects->links() }}
         </div>
         @endif
@@ -188,6 +183,44 @@
 </div>
 
 <style>
+.activity-table-container {
+    overflow-x: auto;
+}
+
+.activity-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.activity-table thead {
+    background: #f9fafb;
+}
+
+.activity-table th {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.activity-table td {
+    padding: 1rem;
+    border-top: 1px solid #e5e7eb;
+    font-size: 0.95rem;
+    color: #4b5563;
+}
+
+.activity-table tbody tr {
+    transition: background 0.2s;
+}
+
+.activity-table tbody tr:hover {
+    background: #f9fafb;
+}
+
 .user-avatar {
     width: 40px;
     height: 40px;
@@ -201,18 +234,35 @@
     font-size: 1rem;
 }
 
-.action-btn-view:hover {
+.role-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.role-mining-tech {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    transition: all 0.2s;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.action-btn:hover {
     background: #2196F3 !important;
     color: #ffffff !important;
-    transform: scale(1.1);
-}
-
-.activity-table tbody tr {
-    transition: background-color 0.2s;
-}
-
-.activity-table tbody tr:hover {
-    background-color: #f9fafb;
+    transform: scale(1.05);
 }
 </style>
 @endsection

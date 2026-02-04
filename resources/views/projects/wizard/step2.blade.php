@@ -60,7 +60,7 @@
                 <!-- Says Section -->
                 <div class="empathy-section">
                     <div class="empathy-section-header">
-                        <h3>💬 Says</h3>
+                        <h3> Says</h3>
                         <p>What do customers express verbally? Direct quotes and statements.</p>
                     </div>
                     <div id="says-container" class="empathy-items">
@@ -84,7 +84,7 @@
                 <!-- Thinks Section -->
                 <div class="empathy-section">
                     <div class="empathy-section-header">
-                        <h3>💭 Thinks</h3>
+                        <h3> Thinks</h3>
                         <p>What concerns or thoughts might customers have internally?</p>
                     </div>
                     <div id="thinks-container" class="empathy-items">
@@ -108,7 +108,7 @@
                 <!-- Does Section -->
                 <div class="empathy-section">
                     <div class="empathy-section-header">
-                        <h3>👤 Does</h3>
+                        <h3> Does</h3>
                         <p>What observable behaviors or actions do customers take?</p>
                     </div>
                     <div id="does-container" class="empathy-items">
@@ -132,7 +132,7 @@
                 <!-- Feels Section -->
                 <div class="empathy-section">
                     <div class="empathy-section-header">
-                        <h3>❤️ Feels</h3>
+                        <h3> Feels</h3>
                         <p>What emotions or feelings do customers experience?</p>
                     </div>
                     <div id="feels-container" class="empathy-items">

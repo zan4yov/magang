@@ -4,12 +4,50 @@
 
 @section('content')
 <div class="dashboard-container">
-    
+    <!-- Progress Indicator -->
+    <div class="wizard-progress">
+        <div class="wizard-step completed">
+            <div class="wizard-step-number">✓</div>
+            <div class="wizard-step-label">Project Info</div>
+        </div>
+        <div class="wizard-step-line completed"></div>
+        <div class="wizard-step completed">
+            <div class="wizard-step-number">✓</div>
+            <div class="wizard-step-label">Empathy Map</div>
+        </div>
+        <div class="wizard-step-line active"></div>
+        <div class="wizard-step active">
+            <div class="wizard-step-number">3</div>
+            <div class="wizard-step-label">Customer Profile</div>
+        </div>
+        <div class="wizard-step-line"></div>
+        <div class="wizard-step">
+            <div class="wizard-step-number">4</div>
+            <div class="wizard-step-label">Value Map</div>
+        </div>
+    </div>
 
     <!-- Header -->
     <div style="margin: 2rem 0;">
         <h1 class="dashboard-title">Step 3: Customer Profile (AI Generated)</h1>
         <p class="dashboard-subtitle">Value Proposition Canvas - Customer Segment</p>
+    </div>
+
+    <!-- Status Badge -->
+    @php $status = $project->getStatusDetails(); @endphp
+    <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: center;">
+        <span style="background: {{ $status['color'] }}20; color: {{ $status['color'] }}; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600;">
+            {{ $status['label'] }}
+        </span>
+        @if($project->customer_profile_approved)
+            <span style="background: #d1fae5; color: #059669; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600;">
+                ✓ Approved for Value Map
+            </span>
+        @else
+            <span style="background: #fef3c7; color: #d97706; padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600;">
+                ⏳ Awaiting Approval
+            </span>
+        @endif
     </div>
 
     <!-- Warning for AI Failure -->
@@ -143,14 +181,31 @@
             </div>
         </div>
 
-        <!-- AI Reasoning -->
+        <!-- AI Reasoning (ReAct Trace) -->
         <div style="background: #ffffff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
             <details>
                 <summary style="cursor: pointer; font-weight: 600; color: #1f2937; font-size: 1.0625rem;">
-                     View AI Reasoning
+                    🧠 View ReAct Reasoning Trace (Layer 1: Empathy Map → Customer Profile)
                 </summary>
-                <div style="margin-top: 1rem; padding: 1rem; background: #f9fafb; border-radius: 8px; color: #4b5563; line-height: 1.6;">
-                    {{ $customerProfile['reasoning'] ?? 'No reasoning available' }}
+                <div style="margin-top: 1rem;">
+                    @if(!empty($customerProfile['reasoning_trace']))
+                        @foreach($customerProfile['reasoning_trace'] as $step)
+                            <div style="background: #f9fafb; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; border-left: 3px solid #7CB342;">
+                                <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.5rem;">
+                                    Step {{ $step['step'] ?? 'N/A' }}: {{ $step['phase'] ?? 'Analysis' }}
+                                </div>
+                                <div style="font-size: 0.875rem; color: #4b5563; line-height: 1.6;">
+                                    <strong>OBSERVE:</strong> {{ $step['observe'] ?? 'N/A' }}<br>
+                                    <strong>THINK:</strong> {{ $step['think'] ?? 'N/A' }}<br>
+                                    <strong>ACT:</strong> {{ $step['act'] ?? 'N/A' }}
+                                </div>
+                            </div>
+                        @endforeach
+                    @else
+                        <div style="padding: 1rem; background: #f9fafb; border-radius: 8px; color: #4b5563; line-height: 1.6;">
+                            {{ $customerProfile['reasoning'] ?? 'No reasoning available' }}
+                        </div>
+                    @endif
                 </div>
             </details>
         </div>
@@ -174,15 +229,24 @@
                     </svg>
                     <span>Edit Empathy Map</span>
                 </a>
-                <form method="POST" action="{{ route('projects.finalize', $project->id) }}" style="display: inline;">
-                    @csrf
-                    <button type="submit" class="btn btn-primary">
+                @if(!$project->customer_profile_approved)
+                    <form method="POST" action="{{ route('projects.customer-profile.approve', $project->id) }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-primary">
+                            <svg style="width: 18px; height: 18px;" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                            <span>Approve & Continue to Value Map</span>
+                        </button>
+                    </form>
+                @else
+                    <a href="{{ route('projects.value-map', $project->id) }}" class="btn btn-primary">
                         <svg style="width: 18px; height: 18px;" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                            <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"/>
                         </svg>
-                        <span>Complete Project</span>
-                    </button>
-                </form>
+                        <span>Continue to Value Map</span>
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -205,7 +269,70 @@
 </form>
 
 <style>
-@import url('{{ asset('css/wizard-progress.css') }}');
+.wizard-progress {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    max-width: 700px;
+    margin: 2rem auto 0;
+    padding: 1.5rem;
+}
+
+.wizard-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.wizard-step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #e5e7eb;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.wizard-step.active .wizard-step-number {
+    background: #7CB342;
+    color: #ffffff;
+}
+
+.wizard-step.completed .wizard-step-number {
+    background: #7CB342;
+    color: #ffffff;
+}
+
+.wizard-step-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.wizard-step.active .wizard-step-label,
+.wizard-step.completed .wizard-step-label {
+    color: #7CB342;
+    font-weight: 600;
+}
+
+.wizard-step-line {
+    flex: 1;
+    height: 2px;
+    background: #e5e7eb;
+    margin: 0 0.75rem;
+    max-width: 80px;
+}
+
+.wizard-step-line.active,
+.wizard-step-line.completed {
+    background: #7CB342;
+}
 
 .profile-section {
     background: #ffffff;

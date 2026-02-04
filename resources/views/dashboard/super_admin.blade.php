@@ -31,7 +31,7 @@
                 </div>
             </div>
 
-            <!-- Active Users -->
+            <!-- Active Users (Online Now) -->
             <div class="stat-card">
                 <div class="stat-icon stat-icon-green">
                     <svg fill="currentColor" viewBox="0 0 20 20">
@@ -39,10 +39,11 @@
                     </svg>
                 </div>
                 <div class="stat-content">
-                    <div class="stat-label">Active Users</div>
-                    <div class="stat-value">{{ number_format($stats['active_users_24h']) }}</div>
+                    <div class="stat-label">Online Now</div>
+                    <div class="stat-value">{{ number_format($stats['active_users_now']) }}</div>
                     <div style="font-size: 0.875rem; color: #6b7280; margin-top: 0.25rem;">
-                        Active in last 24 hours
+                        <span style="display: inline-block; width: 8px; height: 8px; background: #22c55e; border-radius: 50%; margin-right: 4px; animation: pulse 2s infinite;"></span>
+                        Currently using the system
                     </div>
                 </div>
             </div>
@@ -321,6 +322,12 @@
 .action-btn-delete:hover {
     background: #ef4444;
     color: #ffffff;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
 }
 </style>
 @endsection
